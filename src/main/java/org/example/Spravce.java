@@ -129,7 +129,6 @@ public class Spravce {
         databaze.nactiZeSouboru(soubor);
     }
 
-
     private void stiskPokracovat() {
         System.out.println("Stiskněte libovolnou klávesu ...");
         scanner.nextLine();
