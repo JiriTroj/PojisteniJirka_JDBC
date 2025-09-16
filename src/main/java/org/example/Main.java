@@ -1,6 +1,6 @@
 package org.example;
 
-import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Main {
@@ -8,24 +8,16 @@ public class Main {
     private static void vypisMenu() {
         System.out.println("===== MENU =====");
         System.out.println("1 - Přidat nový záznam");
-        System.out.println("2 - Vypsat všechny záznamy");
+        System.out.println("2 - Vypsat všechny záznamy");2
         System.out.println("3 - Vyhledat záznam podle jména");
         System.out.println("4 - Smazat záznam");
         System.out.println("5 - Konec");
         System.out.print("Zadej volbu: ");
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         Scanner scanner = new Scanner(System.in);
         Spravce spravce = new Spravce();
-
-        // Načtení dat při startu
-        try {
-            spravce.nactiZeSouboru("zaznamy.csv");
-            System.out.println("Data načtena ze souboru.");
-        } catch (IOException e) {
-            System.out.println("Soubor se nepodařilo načíst, začínáme s prázdným seznamem.");
-        }
 
         boolean pokracovat = true;
         while (pokracovat) {
@@ -42,12 +34,6 @@ public class Main {
                     case 4 -> spravce.smazZaznam();
                     case 5 -> {
                         pokracovat = false;
-                        try {
-                            spravce.zapisDoSouboru("zaznamy.csv");
-                            System.out.println("Data byla uložena. Konec programu.");
-                        } catch (IOException e) {
-                            System.out.println("Nepodařilo se uložit data do souboru.");
-                        }
                     }
                     default -> System.out.println("Neplatná volba, zkus znovu.");
                 }

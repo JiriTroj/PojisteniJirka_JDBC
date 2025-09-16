@@ -1,6 +1,6 @@
 package org.example;
 
-import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -8,7 +8,7 @@ public class Spravce {
     private Databaze databaze;
     public Scanner scanner = new Scanner(System.in);
 
-    public Spravce() {
+    public Spravce() throws SQLException {
         databaze = new Databaze();
     }
 
@@ -18,25 +18,24 @@ public class Spravce {
         System.out.println("Zadejte příjmení:");
         String prijmeni = scanner.nextLine().trim();  // Odstraníme mezery
 
-        ArrayList<Zaznam> zaznamy = databaze.najdiZaznamy(jmeno, prijmeni);
+        ArrayList<Osoba> zaznamy = databaze.najdiZaznamy(jmeno, prijmeni);
         if (zaznamy.isEmpty()) {
             System.out.println("K zadanému jménu a příjmení nikdo nenalezen");
             stiskPokracovat();
             return;
         }
-        zaznamy.forEach(zaznam -> System.out.println(zaznam));
+        zaznamy.forEach(osoba -> System.out.println(osoba));
         stiskPokracovat();
     }
 
-
     public void vypisZaznamy() {
-        ArrayList<Zaznam> zaznamy = databaze.najdiZaznamy();
+        ArrayList<Osoba> zaznamy = databaze.najdiZaznamy();
         if (zaznamy.isEmpty()) {
             System.out.println("V databázi nejsou žádné záznamy pojištěných osob");
             stiskPokracovat();
             return;
         }
-        zaznamy.forEach(zaznam -> System.out.println(zaznam));
+        zaznamy.forEach(osoba -> System.out.println(osoba));
         stiskPokracovat();
     }
 
@@ -85,7 +84,6 @@ public class Spravce {
         }
     }
 
-    // Nová metoda pro smazání záznamu
     public void smazZaznam() {
         System.out.println("Zadejte jméno pojištěného, jehož záznam chcete smazat:");
         String jmeno = scanner.nextLine().trim();  // Odstraníme mezery
@@ -93,7 +91,7 @@ public class Spravce {
         String prijmeni = scanner.nextLine().trim();  // Odstraníme mezery
 
         // Pokusíme se najít záznamy pro dané jméno a příjmení
-        ArrayList<Zaznam> zaznamy = databaze.najdiZaznamy(jmeno, prijmeni);
+        ArrayList<Osoba> zaznamy = databaze.najdiZaznamy(jmeno, prijmeni);
         if (zaznamy.isEmpty()) {
             System.out.println("Žádný záznam nebyl nalezen pro zadané jméno a příjmení.");
             stiskPokracovat();
@@ -101,7 +99,7 @@ public class Spravce {
         }
 
         // Zobrazíme nalezené záznamy a požádáme uživatele o potvrzení smazání
-        zaznamy.forEach(zaznam -> System.out.println(zaznam));
+        zaznamy.forEach(osoba -> System.out.println(osoba));
 
 
         System.out.println("Chcete tento záznam opravdu smazat? (ano/ne):");
@@ -117,16 +115,6 @@ public class Spravce {
             System.out.println("Mazání záznamu bylo zrušeno.");
         }
         stiskPokracovat();
-    }
-
-    public void zapisDoSouboru(String soubor) throws IOException {
-        databaze.zapisDoSouboru(soubor);
-        System.out.println("Databáze byla úspěšně exportována do souboru " + soubor);
-    }
-
-    // Nová metoda pro načtení databáze ze souboru při startu aplikace
-    public void nactiZeSouboru(String soubor) throws IOException {
-        databaze.nactiZeSouboru(soubor);
     }
 
     private void stiskPokracovat() {

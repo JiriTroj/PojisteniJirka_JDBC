@@ -1,81 +1,80 @@
 package org.example;
 
-import java.io.*;
+import java.sql.*;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 public class Databaze {
-    private ArrayList<Zaznam> zaznamy;
+    private Connection conn;
 
-    public Databaze() {
-        zaznamy = new ArrayList<>();
+    public Databaze() throws SQLException {
+        conn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/osobydb", "root", ""
+        );
     }
 
-    public void pridejZaznam(String jmeno, String prijmeni, Integer vek, String telefon) {
-        zaznamy.add(new Zaznam(jmeno, prijmeni, vek, telefon));
-    }
-
-    public ArrayList<Zaznam> najdiZaznamy() {
+    public ArrayList<Osoba> najdiZaznamy() {
+        ArrayList<Osoba> zaznamy = new ArrayList<>();
+        String sql = "SELECT jmeno, prijmeni, vek, telefon FROM pojistenci";
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                String jmeno = rs.getString("jmeno");
+                String prijmeni = rs.getString("prijmeni");
+                int vek = rs.getInt("vek");
+                String telefon = rs.getString("telefon");
+                zaznamy.add(new Osoba(jmeno, prijmeni, vek, telefon));
+            }
+        } catch (SQLException e) {
+            System.err.println("Chyba při načítání záznamů: " + e.getMessage());
+        }
         return zaznamy;
     }
 
-    public ArrayList<Zaznam> najdiZaznamy(String jmeno, String prijmeni) {
-        return zaznamy.stream()
-                .filter(zaznam -> jmeno.equalsIgnoreCase(zaznam.getJmeno())
-                        && prijmeni.equalsIgnoreCase(zaznam.getPrijmeni()))
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
-
-
-    public boolean smazZaznam(String jmeno, String prijmeni) {
-        return zaznamy.removeIf(zaznam ->
-                jmeno.equalsIgnoreCase(zaznam.getJmeno())
-                        && prijmeni.equalsIgnoreCase(zaznam.getPrijmeni()));
-    }
-
-    // 1. Metoda pro zápis databáze do CSV
-    public void zapisDoSouboru(String soubor) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(soubor))) {
-            // Hlavička
-            writer.write("Jmeno,Prijmeni,Vek,Telefon\n");
-
-            // Data
-            for (Zaznam zaznam : zaznamy) {
-                writer.write(String.format("\"%s\",\"%s\",%d,\"%s\"\n",
-                        zaznam.getJmeno(),
-                        zaznam.getPrijmeni(),
-                        zaznam.getVek(),
-                        zaznam.getTelefon()));
+    public ArrayList<Osoba> najdiZaznamy(String jmeno, String prijmeni) {
+        ArrayList<Osoba> zaznamy = new ArrayList<>();
+        String sql = "SELECT jmeno, prijmeni, vek, telefon FROM pojistenci WHERE jmeno = ? AND prijmeni = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, jmeno);
+            stmt.setString(2, prijmeni);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String nalezenyJmeno = rs.getString("jmeno");
+                    String nalezenyPrijmeni = rs.getString("prijmeni");
+                    int nalezenyVek = rs.getInt("vek");
+                    String nalezenyTelefon = rs.getString("telefon");
+                    zaznamy.add(new Osoba(nalezenyJmeno, nalezenyPrijmeni, nalezenyVek, nalezenyTelefon));
+                }
             }
+        } catch (SQLException e) {
+            System.err.println("Chyba při vyhledávání záznamů: " + e.getMessage());
+        }
+        return zaznamy;
+    }
+
+    public void pridejZaznam(String jmeno, String prijmeni, int vek, String telefon) {
+        String sql = "INSERT INTO pojistenci (jmeno, prijmeni, vek, telefon) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, jmeno);
+            stmt.setString(2, prijmeni);
+            stmt.setInt(3, vek);
+            stmt.setString(4, telefon);
+            stmt.executeUpdate();
+            System.out.println("Záznam byl úspěšně přidán do databáze.");
+        } catch (SQLException e) {
+            System.err.println("Chyba při přidávání záznamu: " + e.getMessage());
         }
     }
 
-    // 2. Metoda pro načtení databáze z CSV
-    public void nactiZeSouboru(String soubor) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader(soubor))) {
-            String radek;
-
-            // První řádek je hlavička, přeskočíme
-            reader.readLine();
-
-            // Vyčistíme kolekci, než začneme načítat
-            zaznamy.clear();
-
-            // Projdeme každý řádek
-            while ((radek = reader.readLine()) != null) {
-                // Rozdělení hodnot – split podle čárky
-                // Odstraníme uvozovky kolem textových polí
-                String[] casti = radek.split(",");
-
-                String jmeno = casti[0].replace("\"", "");
-                String prijmeni = casti[1].replace("\"", "");
-                int vek = Integer.parseInt(casti[2]);
-                String telefon = casti[3].replace("\"", "");
-
-                // Vytvoření objektu Zaznam a přidání do kolekce
-                Zaznam z = new Zaznam(jmeno, prijmeni, vek, telefon);
-                zaznamy.add(z);
-            }
+    public boolean smazZaznam(String jmeno, String prijmeni) {
+        String sql = "DELETE FROM pojistenci WHERE jmeno = ? AND prijmeni = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, jmeno);
+            stmt.setString(2, prijmeni);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Chyba při mazání záznamu: " + e.getMessage());
+            return false;
         }
     }
 
