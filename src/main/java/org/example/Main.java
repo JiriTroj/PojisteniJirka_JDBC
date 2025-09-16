@@ -8,7 +8,7 @@ public class Main {
     private static void vypisMenu() {
         System.out.println("===== MENU =====");
         System.out.println("1 - Přidat nový záznam");
-        System.out.println("2 - Vypsat všechny záznamy");2
+        System.out.println("2 - Vypsat všechny záznamy");
         System.out.println("3 - Vyhledat záznam podle jména");
         System.out.println("4 - Smazat záznam");
         System.out.println("5 - Konec");
